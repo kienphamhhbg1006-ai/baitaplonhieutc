@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hỗ Trợ Tài Chính Pro - Bãi Biển Chill</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #28a745;
+      --primary-dark: #218838;
+      --text: #fff;
+      --bg: rgba(0,0,0,0.3);
+      --white: rgba(255,255,255,0.95);
+      --border: rgba(255,255,255,0.3);
+      --shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    /* BACKGROUND ẢNH BÃI BIỂN */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: url('https://as2.ftcdn.net/v2/jpg/07/56/88/71/1000_F_756887101_b4UUO9bF00nBpBzL9GihtmE6xUB5TGER.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text);
+      line-height: 1.7;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.3));
+      z-index: -1;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    
+
+    /* HEADER */
+    .header {
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+      box-shadow: var(--shadow); padding: 1.5rem 0; position: sticky; top: 0; z-index: 100;
+    }
+    .header .container { 
+      display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 20px;
+    }
+    .logo {
+      font-size: 2rem; font-weight: bold; color: white; margin-right: 20px; text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .nav {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .nav a {
+      text-decoration: none; color: white; font-weight: 600;
+      padding: 12px 20px; border-radius: 50px; transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 8px; font-size: 0.95rem;
+      background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
+    }
+    .nav a:hover {
+      background: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(40,167,69,0.5);
+    }
+    .nav a.active {
+      background: var(--primary); font-weight: bold;
+    }
+
+    /* LOADING */
+    #loader { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: rgba(0,0,0,0.3); z-index: 10000; }
+    #progress { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+
+    /* WEATHER */
+    .weather { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; box-shadow: var(--shadow); font-size: 0.9rem; backdrop-filter: blur(5px); }
+
+    /* SECTION */
+    section { padding: 4rem 0; display: none; opacity: 0; transition: opacity 0.4s ease; }
+    section.active { display: block; opacity: 1; }
+
+    .hero {
+      text-align: center; padding: 6rem 1rem; color: white;
+    }
+    .hero h1 { font-size: 3rem; margin-bottom: 1rem; text-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+    .hero p { font-size: 1.2rem; margin-bottom: 2rem; }
+    .btn {
+      display: inline-block; background: var(--primary); color: white; 
+      padding: 16px 36px; border-radius: 50px; text-decoration: none; 
+      font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(40,167,69,0.4);
+    }
+    .btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; }
+    .card {
+      background: var(--white); padding: 2rem; border-radius: 16px; 
+      box-shadow: var(--shadow); text-align: center; transition: transform 0.3s; color: #333;
+    }
+    .card:hover { transform: translateY(-10px); }
+    .card h3 { color: var(--primary); margin-bottom: 1rem; }
+
+    /* FORM ĐĂNG NHẬP */
+    #login .login-box {
+      background: var(--white); padding: 2.5rem; border-radius: 20px; box-shadow: var(--shadow);
+      max-width: 380px; margin: 3rem auto; text-align: center; color: #333;
+    }
+    #login .login-box h2 { color: var(--primary); }
+    #login .login-box input { 
+      width: 100%; padding: 14px 16px; margin: 12px 0; border: 1.5px solid #e0e0e0; border-radius: 12px;
+      background: #fafafa; transition: 0.3s;
+    }
+    #login .login-box input:focus { border-color: var(--primary); background: white; }
+    #login .login-box button {
+      width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 50px;
+      font-weight: bold; cursor: pointer; transition: 0.3s;
+    }
+    #login .login-box button:hover { background: var(--primary-dark); }
+
+    /* TÍNH LÃI KÉP */
+    .calc-box {
+      background: var(--white); padding: 2.5rem; border-radius: 20px; margin: 2.5rem auto; max-width: 600px; box-shadow: var(--shadow); text-align: center; color: #333;
+    }
+    .calc-box input {
+      width: 100%; padding: 14px; margin: 10px 0; border: 1.5px solid #ddd; border-radius: 12px; background: #f9f9f9;
+    }
+    .calc-box button {
+      background: var(--primary); color: white; border: none; border-radius: 50px; padding: 14px 32px; font-weight: bold; cursor: pointer;
+    }
+
+    .zalo-chat {
+      position: fixed; bottom: 20px; right: 20px; z-index: 999; 
+      background: white; border-radius: 50%; box-shadow: 0 6px 15px rgba(0,0,0,0.3); padding: 12px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+    .footer { background: rgba(0,0,0,0.5); color: #ddd; text-align: center; padding: 2.5rem; backdrop-filter: blur(10px); }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .calc-box input, .calc-box button { margin: 8px 0; }
+    }
+    
+  </style>
+</head>
+<body>
+
+  <!-- LOADING -->
+  <div id="loader"><div id="progress"></div></div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container">
+<!-- LOGO HỖ TRỢ TÀI CHÍNH PRO (PHIÊN BẢN MÀU TRẮNG) -->
+<div style="
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.3px;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+  transition: all 0.3s ease;
+">
+  <div style="
+    width: 48px; 
+    height: 48px; 
+    border-radius: 50%; 
+    background: rgba(255,255,255,0.15);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(255,255,255,0.4);
+    animation: pulseWhite 2.5s infinite ease-in-out;
+  ">
+    💰
+  </div>
+  <h2 style="
+    margin: 0;
+    font-size: 1.4rem;
+    color: white;
+    text-shadow: 0 0 8px rgba(255,255,255,0.5);
+  ">
+    Hỗ Trợ Tài Chính <span style="font-weight:700; opacity:0.9;">Phạm Kiên</span>
+  </h2>
+</div>
+
+<style>
+@keyframes pulseWhite {
+  0% { box-shadow: 0 0 8px rgba(255,255,255,0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 18px rgba(255,255,255,0.8); transform: scale(1.05); }
+  100% { box-shadow: 0 0 8px rgba(255,255,255,0.3); transform: scale(1); }
+}
+</style>
+
+
+
+
+      <nav class="nav">
+        <a class="active" data-page="home">Trang Chủ</a>
+        <a data-page="dichvu">Dịch Vụ</a>
+        <a data-page="blog">Blog</a>
+        <a data-page="login">Đăng Nhập</a>
+        <a data-page="thanhtoan">Thanh Toán</a>
+        <a data-page="admin">Admin</a>
+      </nav>
+      <div class="weather" id="weather">Thời tiết: Đang tải...</div>
+    </div>
+  </header>
+
+  <!-- TRANG CHỦ -->
+  <section id="home" class="active">
+    <div class="hero">
+      <h1>Tăng Trưởng 25%/Năm</h1>
+      <p>Đầu tư thông minh – Tối ưu thuế – Lập kế hoạch dài hạn</p>
+      <a class="btn" data-page="dichvu">Tư Vấn Miễn Phí</a>
+    </div>
+    <div class="container">
+      <div class="grid">
+        <div class="card">
+          <img src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Đầu tư" style="width:100%; height:150px; object-fit:cover; border-radius:12px; margin-bottom:1rem;">
+          <h3>Đầu Tư</h3><p>Lợi nhuận 15-25%/năm</p>
+        </div>
+        <div class="card">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtP-pB4QZckOhweGOVHRbVYNtdandcUll0Lw&s" alt="Thuế" style="width:100%; height:150px; object-fit:cover; border-radius:12px; margin-bottom:1rem;">
+          <h3>Quản Lý Thuế</h3><p>Tiết kiệm 10-20%</p>
+        </div>
+        <div class="card">
+          <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Kế hoạch" style="width:100%; height:150px; object-fit:cover; border-radius:12px; margin-bottom:1rem;">
+          <h3>Lập Kế Hoạch</h3><p>Hưu trí, di sản</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- THANH TOÁN - ĐÃ SỬA ĐẸP + CHẠY MƯỢT -->
+<section id="thanhtoan">
+  <div class="container">
+    <div style="background: rgba(255,255,255,0.95); padding: 2.5rem; border-radius: 20px; max-width: 500px; margin: 2rem auto; box-shadow: var(--shadow); text-align: center; color: #333;">
+      <h3 style="color: var(--primary); margin-bottom: 1.5rem; font-size: 1.5rem;">Chọn Phương Thức Thanh Toán</h3>
+      <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 20px 0;">
+        <button style="background: #e91e63; color: white; padding: 14px 28px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; min-width: 130px; box-shadow: 0 4px 10px rgba(233,30,99,0.3);" 
+                onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(233,30,99,0.4)'"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 10px rgba(233,30,99,0.3)'">
+          Momo
+        </button>
+        <button style="background: #1da1f2; color: white; padding: 14px 28px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; min-width: 130px; box-shadow: 0 4px 10px rgba(29,161,242,0.3);"
+                onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(29,161,242,0.4)'"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 10px rgba(29,161,242,0.3)'">
+          ZaloPay
+        </button>
+        <button style="background: #6c757d; color: white; padding: 14px 28px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; min-width: 130px; box-shadow: 0 4px 10px rgba(108,117,125,0.3);"
+                onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(108,117,125,0.4)'"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 10px rgba(108,117,125,0.3)'">
+          Chuyển Khoản
+        </button>
+      </div>
+      <p style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+        Sau khi thanh toán, vui lòng gửi biên lai qua Zalo: <strong>0972339305</strong>
+      </p>
+    </div>
+  </div>
+</section>
+<!-- ADMIN - SIÊU XỊN + GIỚI THIỆU BẢN THÂN -->
+<section id="admin">
+  <div class="container">
+    <h2 style="text-align:center; color:white; margin-bottom:2rem; text-shadow: 0 3px 10px rgba(0,0,0,0.5); font-size:2.5rem;">
+      Điều đáng chú ý!!!!!
+    </h2>
+
+    <!-- THỐNG KÊ NHANH -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:3rem;">
+      <div style="background:rgba(255,255,255,0.95); padding:1.5rem; border-radius:16px; text-align:center; box-shadow:var(--shadow); color:#333;">
+        <i class="fas fa-users" style="font-size:2rem; color:var(--primary); margin-bottom:0.5rem;"></i>
+        <h3 style="margin:0.5rem 0; color:var(--primary);">Khách Hàng</h3>
+        <p style="font-size:1.8rem; font-weight:bold; margin:0; color:#28a745;">1,250</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.95); padding:1.5rem; border-radius:16px; text-align:center; box-shadow:var(--shadow); color:#333;">
+        <i class="fas fa-dollar-sign" style="font-size:2rem; color:var(--primary); margin-bottom:0.5rem;"></i>
+        <h3 style="margin:0.5rem 0; color:var(--primary);">Doanh Thu</h3>
+        <p style="font-size:1.8rem; font-weight:bold; margin:0; color:#28a745;">500tr</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.95); padding:1.5rem; border-radius:16px; text-align:center; box-shadow:var(--shadow); color:#333;">
+        <i class="fas fa-chart-line" style="font-size:2rem; color:var(--primary); margin-bottom:0.5rem;"></i>
+        <h3 style="margin:0.5rem 0; color:var(--primary);">Tăng Trưởng</h3>
+        <p style="font-size:1.8rem; font-weight:bold; margin:0; color:#28a745;">+25%</p>
+      </div>
+    </div>
+
+   <!-- ÂM THANH TỰ ĐỘNG + LẶP VÔ HẠN -->
+<audio id="bgMusic" 
+       src="./Nhạc EDM Thư Giãn  Sau Ngày Dài Mệt Mỏi  ♫ Top 10 Bản EDM Mix Thư Giãn  Giai Điệu Vui Tươi  2025 - FURY EDM.mp3"
+       loop 
+       preload="auto"
+       autoplay>
+</audio>
+
+
+  
+<!-- NÚT ÂM THANH DI CHUYỂN ĐƯỢC -->
+<div id="soundButtonContainer" 
+     style="position:fixed; top:1rem; right:1rem; z-index:1000;">
+  <button id="soundToggle" 
+          style="background:rgba(255,255,255,0.2); color:white; border:none; border-radius:50%; width:55px; height:55px; cursor:grab; font-size:1.3rem; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); box-shadow:0 4px 10px rgba(0,0,0,0.2); touch-action:none;">
+    🔊
+  </button>
+</div>
+
+<script>
+  const dragButton = document.getElementById("soundToggle");
+  const container = document.getElementById("soundButtonContainer");
+  const audio = document.getElementById("bgMusic");
+
+  let isDragging = false, startX, startY, currentX = 0, currentY = 0;
+
+  // 🖱️ Kéo trên máy tính
+  dragButton.addEventListener("mousedown", startDrag);
+  window.addEventListener("mouseup", stopDrag);
+  window.addEventListener("mousemove", dragMove);
+
+  // 📱 Kéo trên điện thoại
+  dragButton.addEventListener("touchstart", startDrag);
+  window.addEventListener("touchend", stopDrag);
+  window.addEventListener("touchmove", dragMove);
+
+  function startDrag(e) {
+    isDragging = true;
+    const evt = e.type.includes("touch") ? e.touches[0] : e;
+    startX = evt.clientX - currentX;
+    startY = evt.clientY - currentY;
+    dragButton.style.cursor = "grabbing";
+  }
+
+  function dragMove(e) {
+    if (!isDragging) return;
+    const evt = e.type.includes("touch") ? e.touches[0] : e;
+    currentX = evt.clientX - startX;
+    currentY = evt.clientY - startY;
+    container.style.transform = `translate(${currentX}px, ${currentY}px)`;
+  }
+
+  function stopDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    dragButton.style.cursor = "grab";
+  }
+
+  // 🎵 Bật / Tắt nhạc (vẫn hoạt động khi nhấn)
+  dragButton.addEventListener("click", (e) => {
+    // Nếu vừa kéo thì không tính là click
+    if (isDragging) return;
+    if (audio.paused) {
+      audio.play();
+      dragButton.textContent = "🔊";
+    } else {
+      audio.pause();
+      dragButton.textContent = "🔈";
+    }
+  });
+</script>
+
+
+
+    <!-- GIỚI THIỆU BẢN THÂN - ĐỈNH CAO -->
+    <div style="background:linear-gradient(135deg, rgba(95, 42, 165, 0.9), rgba(122, 64, 188, 0.9)); padding:2.5rem; border-radius:20px; display:flex; align-items:center; gap:2rem; flex-wrap:wrap; box-shadow:var(--shadow); color:white;">
+      <div style="flex:1; min-width:250px; text-align:center;">
+        <img src="data:image/jpeg;base64,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" 
+             alt="Ảnh bạn" 
+             style="width:180px; height:180px; border-radius:50%; object-fit:cover; border:5px solid white; box-shadow:0 8px 20px rgba(0,0,0,0.3);">
+      </div>
+      <div style="flex:2; min-width:300px;">
+        <h3 style="font-size:1.8rem; margin-bottom:0.5rem; color:white;">Chào bạn! Tôi là <span style="color:#ffd700; font-weight:bold;">Phạm Kiên</span></h3>
+        <p style="font-size:1.1rem; line-height:1.8; margin:0.8rem 0;">
+          Chuyên gia tài chính với <strong>5 năm kinh nghiệm</strong> trong lĩnh vực đầu tư, tối ưu thuế và lập kế hoạch tài sản.
+        </p>
+        <p style="font-size:1.1rem; line-height:1.8; margin:0.8rem 0;">
+          Đã giúp <strong>hơn 500 khách hàng</strong> tăng trưởng tài sản trung bình <strong>25%/năm</strong> và tiết kiệm hàng trăm triệu tiền thuế hợp pháp.
+        </p>
+        <p style="font-size:1.1rem; line-height:1.8; margin:0.8rem 0;">
+          <strong>Cam kết:</strong> Minh bạch – Hiệu quả – Đồng hành lâu dài.
+        </p>
+        <div style="margin-top:1.5rem;">
+          <a href="https://zalo.me/0972339305" target="_blank" 
+             style="background:white; color:var(--primary); padding:12px 28px; border-radius:50px; text-decoration:none; font-weight:bold; display:inline-block; box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+            <i class="fab fa-zalo"></i> Liên hệ ngay
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- DỊCH VỤ -->
+  <section id="dichvu">
+    <div class="container">
+      <h2 style="text-align:center; color:white; margin-bottom:2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">Bảng Giá Dịch Vụ</h2>
+      <div class="card">
+        <table style="width:100%; border-collapse:collapse; background:rgba(255,255,255,0.95); border-radius:16px; overflow:hidden;">
+          <tr style="background:var(--primary); color:white;"><th style="padding:16px;">Gói</th><th>Giá</th><th>Lợi Ích</th></tr>
+          <tr><td style="padding:16px;">Đầu Tư Cao Cấp</td><td>8.000.000 VNĐ</td><td>Theo dõi hàng quý</td></tr>
+          <tr style="background:#f9f9f9;"><td style="padding:16px;">Thuế Doanh Nghiệp</td><td>15.000.000 VNĐ</td><td>Tư vấn pháp lý</td></tr>
+        </table>
+        <button id="createPdf" class="btn" style="margin-top:20px;">Tạo Báo Cáo PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG + TÍNH LÃI KÉP -->
+  <section id="blog">
+    <div class="container">
+      <div class="calc-box">
+        <h3 style="color:var(--primary);">Tính Lãi Kép</h3>
+        <input type="number" id="goc" placeholder="Tiền gốc (VNĐ)" />
+        <input type="number" id="lai" placeholder="Lãi suất (%)" step="0.1" />
+        <input type="number" id="nam" placeholder="Số năm" />
+        <button id="calcBtn">Tính Toán</button>
+        <p id="result" style="margin:15px 0; font-weight:bold; color:var(--primary);"></p>
+        <canvas id="chart" height="120"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ĐĂNG NHẬP -->
+  <section id="login">
+    <div class="login-box">
+      <h2>Đăng Nhập</h2>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <input type="password" id="loginPass" placeholder="Mật khẩu" required />
+        <label style="display:flex; align-items:center; gap:8px; color:#666;">
+          <!-- KHỐI NHỚ MẬT KHẨU - GỌN GÀNG ĐẸP -->
+<div style="
+  display: flex; 
+  align-items: center; 
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  color: #2d6a4f;
+  cursor: pointer;
+  transition: 0.3s;
+" 
+onmouseover="this.style.color='#40916c'" 
+onmouseout="this.style.color='#2d6a4f'">
+  <input type="checkbox" id="remember" 
+         style="accent-color: #2d6a4f; width: 16px; height: 16px; cursor:pointer;">
+  <label for="remember" style="cursor:pointer;">Nhớ mật khẩu</label>
+</div>
+
+        </label>
+        <button type="submit">Đăng Nhập</button>
+      </form>
+      <div style="margin-top:1rem; font-size:0.9rem;">
+        <a href="#" style="color:var(--primary);">Quên mật khẩu?</a> | <a href="#" style="color:var(--primary);">Đăng ký</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>thiếu tiền gọi Kiên Đây!!!!! | Hotline: 0972339305 | Email: info@taichinhpro.vn</p>
+  </footer>
+
+
+  <!-- JS -->
+  <script>
+    let chart;
+
+    // Chuyển trang
+    document.querySelectorAll('[data-page]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const page = this.getAttribute('data-page');
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.getElementById(page).classList.add('active');
+        document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Tính lãi kép
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      const goc = parseFloat(document.getElementById('goc').value) || 0;
+      const lai = parseFloat(document.getElementById('lai').value) / 100 || 0;
+      const nam = parseInt(document.getElementById('nam').value) || 0;
+
+      if (goc <= 0 || lai < 0 || nam <= 0) {
+        document.getElementById('result').innerHTML = `<span style="color:#e74c3c;">Nhập số hợp lệ!</span>`;
+        return;
+      }
+
+      const ketqua = goc * Math.pow(1 + lai, nam);
+      document.getElementById('result').innerHTML = `Sau <strong>${nam}</strong> năm: <strong style="color:#28a745">${ketqua.toLocaleString('vi-VN')} VNĐ</strong>`;
+
+      const labels = Array.from({length: nam + 1}, (_, i) => `Năm ${i}`);
+      const data = labels.map((_, i) => goc * Math.pow(1 + lai, i));
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById('chart'), {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Tài sản', data, borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,0.1)', fill: true, tension: 0.4 }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    });
+
+    // PDF
+    document.getElementById('createPdf')?.addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.text('Báo Cáo Tài Chính Pro', 20, 20);
+      doc.setFontSize(12);
+      doc.text('Ngày: ' + new Date().toLocaleDateString('vi-VN'), 20, 40);
+      doc.save('BaoCao_TaiChinhPro.pdf');
+    });
+  </script>
+</body>
+</html>
